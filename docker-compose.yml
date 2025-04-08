@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./backend                 # Use the Dockerfile in the backend folder
+    container_name: eatery-backend   # Optional: gives a human-friendly container name
+    ports:
+      - "8000:8000"                  # Expose FastAPI on host port 8000
+    volumes:
+      - ./backend:/app               # Mount local code for live reload (dev only)
+    env_file:
+      - ./backend/.env               # Load env vars (like DB credentials)
+    depends_on:
+      - db                           # Ensure backend waits for PostgreSQL to be ready
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: eatery-frontend
+    ports:
+      - "3000:3000"                  # Vite/React dev server
+    volumes:
+      - ./frontend:/app
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+
+  db:
+    image: postgres:15               # Official PostgreSQL image (version 15)
+    container_name: eatery-postgres
+    restart: always
+    ports:
+      - "5432:5432"                  # Expose Postgres on host port 5432
+    environment:                    # Postgres config via env vars
+      POSTGRES_DB: eaterydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Persist DB data with a named volume
+
+volumes:
+  pgdata:                            # Define the named volume for persistent DB storage
+
