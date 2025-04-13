@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import base_router
+from app.api.base_router import base_router
 
 app = FastAPI(title="Eatery Recommender")
 

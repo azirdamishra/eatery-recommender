@@ -1,7 +1,7 @@
 # ---------- Configuration ----------
 .PHONY: install-backend backend-dev test install-frontend frontend-dev \
         up down build restart logs backend-build backend-down backend-logs \
-        lint format
+        lint format init-db
 
 # ---------- Backend Commands ----------
 install-backend:
@@ -12,6 +12,9 @@ backend-dev:
 
 test:
 	cd backend && pytest
+
+init-db:
+	cd backend && python -m app.core.init_db
 
 backend-build:
 	docker compose build backend
