@@ -1,17 +1,7 @@
 from sqlalchemy.orm import Session
-#from app.models.user import User
 from app.models import User #after adding to __init__.py
-from typing import Dict
 from app.schemas.user import UserCreate, UserOut
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+from app.utils.user_utils import get_password_hash, verify_password, create_access_token
 
 def create_user(db: Session, user_data: UserCreate) -> UserOut:
     
@@ -31,22 +21,30 @@ def create_user(db: Session, user_data: UserCreate) -> UserOut:
     db.refresh(db_user)
     return UserOut.model_validate(db_user)
 
-def login_current_user(db: Session, user_data: UserCreate) -> Dict:
+def login_current_user(user_data: UserCreate, db: Session) -> dict:
     try:
         user = get_user(db, user_data.username)
         if not verify_password(user_data.password, user.password):
             raise ValueError("Invalid password")
-        return {"message": "Login successful", "user": UserOut.model_validate(user)}
+        #create access token
+        access_token = create_access_token(
+            data={"sub": user.username}
+        )
+        return{
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": UserOut.model_validate(user)
+        }
     except ValueError as e:
         raise ValueError(str(e))
 
-def get_user( db: Session, username: str) -> Dict:
+def get_user( db: Session, username: str) -> dict:
     user = db.query(User).filter(User.username==username).first()
     if not user:
         raise ValueError("User not found")
     return user
 
-def return_all_users(db: Session) -> Dict:
+def return_all_users(db: Session) -> dict:
     try:
         users = db.query(User).all()
         return users
