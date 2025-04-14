@@ -23,9 +23,9 @@ def login_user(user: UserCreate, db: Session = Depends(get_db)):
        raise HTTPException(status_code=401, detail=str(e))
    
 @router.get("/users") #for internal use
-def get_all_users():
+def get_all_users(db: Session = Depends(get_db)):
     try: 
-        return return_all_users()
+        return return_all_users(db)
     except ValueError as e:
         raise HTTPException(status_code=401)
         
