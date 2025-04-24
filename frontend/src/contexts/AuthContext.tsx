@@ -47,10 +47,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (username: string, password: string, email: string) => {
         console.log('AuthContext: Starting login...');
-        const data = await authService.login(username, password, email) as LoginResponse;
-        console.log('AuthContext: Login response:', data);
-        setUser(data.user);
-        console.log('AuthContext: User state updated:', data.user);
+        try{
+            const data = await authService.login(username, password, email) as LoginResponse;
+            console.log('AuthContext: Login response:', data);
+            //get current user should be properly called here
+            //waiting for user data
+            const user = await authService.getCurrentUser();
+            setUser(user);
+            console.log('AuthContext: User state updated:', data.user); //undefined because there is no user data 
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
+        }
     };
 
     const register = async (username: string, email: string, password: string) => {

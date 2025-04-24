@@ -6,6 +6,8 @@ import Dashboard from './components/Dashboard';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading } = useAuth();
+    // if(loading) return <Spinner />
+    // if(!user) return <Navigate to="/login" />;
     console.log('PrivateRoute: Current state:', { user, loading });
 
     if (loading) {
@@ -37,7 +39,7 @@ function App() {
                             </PrivateRoute>
                         }
                     />
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
+                    <Route path="/" element={<Navigate to="/login" />} />
                 </Routes>
             </AuthProvider>
         </Router>
