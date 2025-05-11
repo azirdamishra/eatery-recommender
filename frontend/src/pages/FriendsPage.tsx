@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import FriendRequests from '../components/FriendRequests';
 import SendFriendRequest from '../components/SendFriendRequest';
 import UserSearch from '../components/UserSearch';
+import { useAuth } from '../contexts/AuthContext';
 
 const FriendsPage: React.FC = () => {
+    const { user } = useAuth();
     const handleUserSelect = (userId: number) => {
         // This will be handled by the SendFriendRequest component
         console.log('Selected user:', userId);
@@ -13,7 +15,10 @@ const FriendsPage: React.FC = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-3xl font-bold">Friends</h1>
+                <div>
+                    <h1 className="text-3xl font-bold">Friends</h1>
+                    <p className="text-gray-600 mt-1">Welcome, {user?.username}!</p>
+                </div>
                 <Link
                     to="/dashboard"
                     className="px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800"
