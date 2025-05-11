@@ -1,5 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Dashboard = () => {
     const { user, logout } = useAuth();
@@ -51,6 +51,15 @@ const Dashboard = () => {
                             <h3 className="text-lg font-semibold mb-2">Profile</h3>
                             <p className="text-slate-500">Manage your profile settings</p>
                         </div>
+
+                        {/* Friends Card */}
+                        <Link
+                            to="/friends"
+                            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                        >
+                            <h3 className="text-lg font-semibold mb-2">Friends</h3>
+                            <p className="text-slate-500">Manage your friends and friend requests</p>
+                        </Link>
 
                         {/* Settings Card */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
