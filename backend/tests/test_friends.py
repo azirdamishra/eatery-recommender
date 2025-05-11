@@ -11,7 +11,8 @@ from app.main import app
 from app.core.database import Base, engine, get_db
 from app.models.user import User
 from app.models.friend import FriendRequest, FriendRequestStatus
-from app.core.security import create_access_token
+#from app.core.security import create_access_token
+from app.utils.user_utils import create_access_token
 
 client = TestClient(app)
 

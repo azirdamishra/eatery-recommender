@@ -11,15 +11,15 @@ from app.core.config import settings
 
 security = HTTPBearer()
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now() + expires_delta
-    else:
-        expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY.get_secret_value(), algorithm=settings.ALGORITHM)
-    return encoded_jwt
+# def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+#     to_encode = data.copy()
+#     if expires_delta:
+#         expire = datetime.now() + expires_delta
+#     else:
+#         expire = datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+#     to_encode.update({"exp": expire})
+#     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY.get_secret_value(), algorithm=settings.ALGORITHM)
+#     return encoded_jwt
 
 async def get_current_user(
         credentials: HTTPAuthorizationCredentials = Depends(security),
