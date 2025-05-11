@@ -9,11 +9,11 @@ import os
 import sys
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-# Load environment variables
-load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
