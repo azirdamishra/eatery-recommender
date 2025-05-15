@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { friendService } from '../services/friendService';
 
 interface User {
     id: number;
     username: string;
     email: string;
+    status: 'none' | 'friend' | 'request_sent' | 'request_received';
 }
 
 interface UserSearchProps {
@@ -16,6 +18,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
     const searchUsers = async (query: string) => {
         if (!query.trim()) {
@@ -25,18 +28,21 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
 
         setLoading(true);
         setError(null);
+        setSuccess(null);
 
         try {
-            const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/users/search`, {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/user/search`, {
                 params: { query },
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             });
+            console.log('Search results:', response.data);
             setUsers(response.data);
-        } catch (err) {
-            setError('Failed to search users');
-            console.error(err);
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.detail || 'Failed to search users';
+            setError(errorMessage);
+            console.error('Search error:', err);
         } finally {
             setLoading(false);
         }
@@ -45,6 +51,99 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         searchUsers(searchTerm);
+    };
+
+    const handleAddFriend = async (userId: number) => {
+        setError(null);
+        setSuccess(null);
+        try {
+            await friendService.sendFriendRequest(userId);
+            setSuccess('Friend request sent successfully!');
+            // Update the user's status in the list
+            setUsers(users.map(user => 
+                user.id === userId ? { ...user, status: 'request_sent' } : user
+            ));
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.detail || 'Failed to send friend request';
+            setError(errorMessage);
+            console.error('Error sending friend request:', err);
+        }
+    };
+
+    const handleRemoveFriend = async (userId: number) => {
+        setError(null);
+        setSuccess(null);
+        try {
+            await friendService.removeFriend(userId);
+            setSuccess('Friend removed successfully!');
+            // Update the user's status in the list to show "Add Friend" button
+            setUsers(users.map(user => 
+                user.id === userId ? { ...user, status: 'none' } : user
+            ));
+            // Notify parent component to refresh friends list
+            onUserSelect(userId);
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.detail || 'Failed to remove friend';
+            setError(errorMessage);
+            console.error('Error removing friend:', err);
+        }
+    };
+
+    const handleCancelRequest = async (userId: number) => {
+        setError(null);
+        setSuccess(null);
+        try {
+            await friendService.cancelFriendRequest(userId);
+            setSuccess('Friend request cancelled successfully!');
+            // Update the user's status in the list to show "Add Friend" button
+            setUsers(users.map(user => 
+                user.id === userId ? { ...user, status: 'none' } : user
+            ));
+            // Notify parent component to refresh friends list
+            onUserSelect(userId);
+        } catch (err: any) {
+            const errorMessage = err.response?.data?.detail || 'Failed to cancel friend request';
+            setError(errorMessage);
+            console.error('Error cancelling friend request:', err);
+        }
+    };
+
+    const renderActionButton = (user: User) => {
+        switch (user.status) {
+            case 'friend':
+                return (
+                    <button
+                        onClick={() => handleRemoveFriend(user.id)}
+                        className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                    >
+                        Remove Friend
+                    </button>
+                );
+            case 'request_sent':
+                return (
+                    <button
+                        onClick={() => handleCancelRequest(user.id)}
+                        className="px-3 py-1 text-sm text-yellow-600 hover:text-yellow-800"
+                    >
+                        Cancel Request
+                    </button>
+                );
+            case 'request_received':
+                return (
+                    <span className="px-3 py-1 text-sm text-gray-500">
+                        Request Received
+                    </span>
+                );
+            default:
+                return (
+                    <button
+                        onClick={() => handleAddFriend(user.id)}
+                        className="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800"
+                    >
+                        Add Friend
+                    </button>
+                );
+        }
     };
 
     return (
@@ -74,6 +173,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
                 </div>
 
                 {error && <div className="text-red-500 text-sm">{error}</div>}
+                {success && <div className="text-green-500 text-sm">{success}</div>}
 
                 {loading ? (
                     <div className="text-center">Loading...</div>
@@ -88,12 +188,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
                                     <p className="font-medium">{user.username}</p>
                                     <p className="text-sm text-gray-500">{user.email}</p>
                                 </div>
-                                <button
-                                    onClick={() => onUserSelect(user.id)}
-                                    className="px-3 py-1 text-sm text-indigo-600 hover:text-indigo-800"
-                                >
-                                    Add Friend
-                                </button>
+                                {renderActionButton(user)}
                             </div>
                         ))}
                     </div>

@@ -47,9 +47,25 @@ def update_friend_request(
 ):
     return FriendService.update_friend_request(db, request_id, current_user.id, update)
 
+@router.delete("/friend-requests/{receiver_id}")
+def cancel_friend_request(
+    receiver_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return FriendService.cancel_friend_request(db, current_user.id, receiver_id)
+
 @router.get("/friends", response_model=List[UserWithFriends])
 def get_friends(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     return FriendService.get_friends(db, current_user.id)
+
+@router.delete("/friends/{friend_id}")
+def remove_friend(
+    friend_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return FriendService.remove_friend(db, current_user.id, friend_id)

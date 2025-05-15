@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FriendRequests from '../components/FriendRequests';
 import SendFriendRequest from '../components/SendFriendRequest';
@@ -7,9 +7,11 @@ import { useAuth } from '../contexts/AuthContext';
 
 const FriendsPage: React.FC = () => {
     const { user } = useAuth();
-    const handleUserSelect = (userId: number) => {
-        // This will be handled by the SendFriendRequest component
-        console.log('Selected user:', userId);
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    const handleUserSelect = () => {
+        // Trigger a refresh of the friends list
+        setRefreshKey(prev => prev + 1);
     };
 
     return (
@@ -30,10 +32,10 @@ const FriendsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-8">
                     <UserSearch onUserSelect={handleUserSelect} />
-                    <SendFriendRequest />
+                    <SendFriendRequest key={refreshKey} />
                 </div>
                 <div>
-                    <FriendRequests />
+                    <FriendRequests key={refreshKey} />
                 </div>
             </div>
         </div>

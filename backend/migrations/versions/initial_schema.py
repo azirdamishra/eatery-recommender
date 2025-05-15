@@ -22,6 +22,9 @@ def upgrade() -> None:
     # Create password context for hashing
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
+    # Drop existing enum type if it exists
+    op.execute('DROP TYPE IF EXISTS friendrequeststatus CASCADE')
+    
     # Create users table first
     op.create_table('users',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -34,9 +37,10 @@ def upgrade() -> None:
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
 
-    # Create friend_requests table
+    # Create friend_requests table with sequence
+    op.execute('CREATE SEQUENCE friend_requests_id_seq')
     op.create_table('friend_requests',
-        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('id', sa.Integer(), nullable=False, server_default=sa.text("nextval('friend_requests_id_seq')")),
         sa.Column('sender_id', sa.Integer(), nullable=False),
         sa.Column('receiver_id', sa.Integer(), nullable=False),
         sa.Column('status', sa.Enum('PENDING', 'ACCEPTED', 'DECLINED', name='friendrequeststatus'), nullable=True),
@@ -88,7 +92,6 @@ def upgrade() -> None:
 
     # Insert test friend requests
     friend_requests = table('friend_requests',
-        column('id', sa.Integer),
         column('sender_id', sa.Integer),
         column('receiver_id', sa.Integer),
         column('status', sa.String),
@@ -99,7 +102,6 @@ def upgrade() -> None:
     now = datetime.now()
     op.bulk_insert(friend_requests, [
         {
-            'id': 1,
             'sender_id': 1,
             'receiver_id': 2,
             'status': 'PENDING',
@@ -107,7 +109,6 @@ def upgrade() -> None:
             'updated_at': now
         },
         {
-            'id': 2,
             'sender_id': 2,
             'receiver_id': 3,
             'status': 'ACCEPTED',
@@ -137,7 +138,9 @@ def downgrade() -> None:
     op.drop_table('friends')
     op.drop_index(op.f('ix_friend_requests_id'), table_name='friend_requests')
     op.drop_table('friend_requests')
+    op.execute('DROP SEQUENCE IF EXISTS friend_requests_id_seq')
     op.drop_index(op.f('ix_users_username'), table_name='users')
     op.drop_index(op.f('ix_users_id'), table_name='users')
     op.drop_index(op.f('ix_users_email'), table_name='users')
-    op.drop_table('users') 
+    op.drop_table('users')
+    op.execute('DROP TYPE IF EXISTS friendrequeststatus CASCADE') 

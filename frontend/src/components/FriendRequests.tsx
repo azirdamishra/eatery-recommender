@@ -55,7 +55,7 @@ const FriendRequests: React.FC = () => {
 
     const handleAcceptRequest = async (requestId: number) => {
         try {
-            await friendService.updateFriendRequest(requestId, 'accepted');
+            await friendService.acceptFriendRequest(requestId);
             await loadFriendRequests();
             await loadFriends();
         } catch (err: any) {
@@ -67,7 +67,7 @@ const FriendRequests: React.FC = () => {
 
     const handleDeclineRequest = async (requestId: number) => {
         try {
-            await friendService.updateFriendRequest(requestId, 'declined');
+            await friendService.declineFriendRequest(requestId);
             await loadFriendRequests();
         } catch (err: any) {
             const errorMessage = err.response?.data?.message || 'Failed to decline friend request';
@@ -96,7 +96,7 @@ const FriendRequests: React.FC = () => {
                             <div key={request.id} className="bg-white p-4 rounded-lg shadow">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <p className="font-semibold">Request from User ID: {request.sender_id}</p>
+                                        <p className="font-semibold">Request from {request.sender_username}</p>
                                         <p className="text-sm text-gray-500">
                                             Sent on: {new Date(request.created_at).toLocaleDateString()}
                                         </p>

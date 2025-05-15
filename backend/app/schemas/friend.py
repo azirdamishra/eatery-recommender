@@ -12,6 +12,7 @@ class FriendRequestCreate(FriendRequestBase):
 class FriendRequestResponse(FriendRequestBase):
     id: int
     sender_id: int
+    sender_username: str
     status: str
     created_at: datetime
     updated_at: datetime
