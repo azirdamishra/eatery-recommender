@@ -2,14 +2,14 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.models.friend import FriendRequest, FriendRequestStatus
 from app.models.user import User
-from app.schemas.friend import FriendRequestCreate, FriendRequestUpdate
+from app.schemas.friend import FriendRequestCreate, FriendRequestUpdate, FriendRequestResponse
 import logging
 
 logger = logging.getLogger(__name__)
 
 class FriendService:
     @staticmethod
-    def send_friend_request(db: Session, sender_id: int, request: FriendRequestCreate) -> dict:
+    def send_friend_request(db: Session, sender_id: int, request: FriendRequestCreate) -> FriendRequestResponse:
         # Check if users exist
         receiver = db.query(User).filter(User.id == request.receiver_id).first()
         if not receiver:
@@ -37,16 +37,7 @@ class FriendService:
         # Get sender's username
         sender = db.query(User).filter(User.id == sender_id).first()
         
-        # Return dictionary with all required fields
-        return {
-            "id": friend_request.id,
-            "sender_id": friend_request.sender_id,
-            "receiver_id": friend_request.receiver_id,
-            "status": friend_request.status,
-            "created_at": friend_request.created_at,
-            "updated_at": friend_request.updated_at,
-            "sender_username": sender.username
-        }
+        return FriendRequestResponse.from_model(friend_request, sender.username)
     
     @staticmethod
     def get_friend_requests(db: Session, user_id: int, status: FriendRequestStatus = None):
@@ -62,22 +53,13 @@ class FriendService:
         
         results = []
         for request, sender_username in query.all():
-            request_dict = {
-                "id": request.id,
-                "sender_id": request.sender_id,
-                "receiver_id": request.receiver_id,
-                "status": request.status,
-                "created_at": request.created_at,
-                "updated_at": request.updated_at,
-                "sender_username": sender_username
-            }
-            results.append(request_dict)
+            results.append(FriendRequestResponse.from_model(request, sender_username))
         
         logger.info(f"Found {len(results)} friend requests")
         return results
     
     @staticmethod
-    def update_friend_request(db: Session, request_id: int, user_id: int, update: FriendRequestUpdate) -> dict:
+    def update_friend_request(db: Session, request_id: int, user_id: int, update: FriendRequestUpdate) -> FriendRequestResponse:
         friend_request = db.query(FriendRequest).filter(
             FriendRequest.id == request_id,
             FriendRequest.receiver_id == user_id,
@@ -104,16 +86,7 @@ class FriendService:
         # Get sender's username
         sender = db.query(User).filter(User.id == friend_request.sender_id).first()
         
-        # Return dictionary with all required fields
-        return {
-            "id": friend_request.id,
-            "sender_id": friend_request.sender_id,
-            "receiver_id": friend_request.receiver_id,
-            "status": friend_request.status,
-            "created_at": friend_request.created_at,
-            "updated_at": friend_request.updated_at,
-            "sender_username": sender.username
-        }
+        return FriendRequestResponse.from_model(friend_request, sender.username)
     
     @staticmethod
     def get_friends(db: Session, user_id: int):
