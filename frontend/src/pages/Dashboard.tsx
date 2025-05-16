@@ -61,6 +61,15 @@ const Dashboard = () => {
                             <p className="text-slate-500">Manage your friends and friend requests</p>
                         </Link>
 
+                        {/* Location Card */}
+                        <Link
+                            to="/location"
+                            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                        >
+                            <h3 className="text-lg font-semibold mb-2">Location</h3>
+                            <p className="text-slate-500">Manage your location and landmarks</p>
+                        </Link>
+
                         {/* Settings Card */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="text-lg font-semibold mb-2">Settings</h3>

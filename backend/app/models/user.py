@@ -40,5 +40,9 @@ class User(Base):
         back_populates="receiver",
         cascade="all, delete-orphan"
     )
+
+    # Location relationships
+    location = relationship("UserLocation", back_populates="user", uselist=False)
+    landmarks = relationship("SavedLandmark", back_populates="user")
     
     
