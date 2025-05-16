@@ -57,8 +57,7 @@ class LocationService:
             name=landmark.name,
             latitude=landmark.latitude,
             longitude=landmark.longitude,
-            description=landmark.description,
-            locality=landmark.locality
+            description=landmark.description
         )
         db.add(new_landmark)
         db.commit()

@@ -4,39 +4,36 @@ import { UserLocation } from '../services/locationService';
 interface CurrentLocationDisplayProps {
   location: UserLocation;
   onUpdateLocation: () => void;
+  onSaveAsLandmark: () => void;
 }
 
 const CurrentLocationDisplay: React.FC<CurrentLocationDisplayProps> = ({
   location,
-  onUpdateLocation
+  onUpdateLocation,
+  onSaveAsLandmark
 }) => {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md">
+    <div className="bg-white rounded-lg shadow-md p-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Current Location</h3>
-        <button
-          onClick={onUpdateLocation}
-          className="px-3 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-900"
-        >
-          Update
-        </button>
-      </div>
-      <div className="space-y-2">
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-500">Latitude:</span>
-          <span className="text-sm font-medium">{location.latitude.toFixed(6)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-500">Longitude:</span>
-          <span className="text-sm font-medium">{location.longitude.toFixed(6)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-500">Last Updated:</span>
-          <span className="text-sm font-medium">
-            {new Date(location.last_updated).toLocaleString()}
-          </span>
+        <h2 className="text-xl font-semibold">Current Location</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={onUpdateLocation}
+            className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Update Location
+          </button>
+          <button
+            onClick={onSaveAsLandmark}
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Save as Landmark
+          </button>
         </div>
       </div>
+      <p className="text-sm text-gray-600">
+        Last updated: {new Date(location.last_updated).toLocaleString()}
+      </p>
     </div>
   );
 };

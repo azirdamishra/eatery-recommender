@@ -26,9 +26,6 @@ const LandmarkList: React.FC<LandmarkListProps> = ({ landmarks, onDelete, onSele
           <div className="flex justify-between items-start">
             <div>
               <h3 className="font-medium text-gray-900">{landmark.name}</h3>
-              {landmark.locality && (
-                <p className="text-sm text-gray-600 mt-1">{landmark.locality}</p>
-              )}
               {landmark.description && (
                 <p className="text-sm text-gray-500 mt-1">{landmark.description}</p>
               )}

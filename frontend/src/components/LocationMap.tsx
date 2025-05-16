@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
-import { Location, Landmark } from '../services/locationService';
+import { Location, Landmark, UserLocation } from '../services/locationService';
+import { GOOGLE_MAPS_OPTIONS } from '../config/maps';
 
 const containerStyle = {
   width: '100%',
@@ -13,25 +14,24 @@ const defaultCenter = {
 };
 
 interface LocationMapProps {
-  currentLocation?: Location;
-  landmarks?: Landmark[];
+  currentLocation?: UserLocation;
+  landmarks: Landmark[];
   onMapClick?: (location: Location) => void;
   onMarkerClick?: (landmark: Landmark) => void;
+  searchLocation?: Location | null;
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({
   currentLocation,
-  landmarks = [],
+  landmarks,
   onMapClick,
-  onMarkerClick
+  onMarkerClick,
+  searchLocation
 }) => {
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
-  });
+  const { isLoaded } = useJsApiLoader(GOOGLE_MAPS_OPTIONS);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -58,7 +58,9 @@ const LocationMap: React.FC<LocationMapProps> = ({
   };
 
   if (!isLoaded) {
-    return <div>Loading map...</div>;
+    return <div className="w-full h-[400px] bg-gray-100 flex items-center justify-center">
+      <p className="text-gray-500">Loading map...</p>
+    </div>;
   }
 
   const mapCenter = currentLocation 
@@ -83,11 +85,23 @@ const LocationMap: React.FC<LocationMapProps> = ({
         />
       )}
 
+      {searchLocation && (
+        <Marker
+          position={{ lat: searchLocation.latitude, lng: searchLocation.longitude }}
+          icon={{
+            url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+          }}
+        />
+      )}
+
       {landmarks.map((landmark) => (
         <Marker
           key={landmark.id}
           position={{ lat: landmark.latitude, lng: landmark.longitude }}
           onClick={() => handleMarkerClick(landmark)}
+          icon={{
+            url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+          }}
         />
       ))}
 

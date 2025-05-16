@@ -16,7 +16,6 @@ export interface Landmark extends Location{
     user_id: number;
     name: string;
     description?: string;
-    locality?: string;
     created_at: string;
 }
 
