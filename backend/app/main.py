@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.base_router import base_router
+from app.api.group import router as group_router
+from app.api.user import router as user_router
 import logging
 
 # Configure logging
@@ -24,6 +26,8 @@ app.add_middleware(
 )
 
 app.include_router(base_router)
+app.include_router(group_router)
+app.include_router(user_router)
 
 @app.get("/")
 def root():

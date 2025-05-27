@@ -1,8 +1,8 @@
 """add location tables
 
-Revision ID: add_location_tables
+Revision ID: 2a3b4c5d6e7f
 Revises: initial_schema
-Create Date: 2024-03-19 00:00:00.000000
+Create Date: 2024-03-21 10:00:00.000000
 
 """
 from typing import Sequence, Union
@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision: str = 'add_location_tables'
+revision: str = '2a3b4c5d6e7f'
 down_revision: Union[str, None] = 'initial_schema'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

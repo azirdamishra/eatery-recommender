@@ -45,4 +45,25 @@ class User(Base):
     location = relationship("UserLocation", back_populates="user", uselist=False)
     landmarks = relationship("SavedLandmark", back_populates="user")
     
+    # Group relationships
+    # This gives direct access to groups
+    groups = relationship(
+        "Group",
+        secondary="group_members",
+        back_populates="members",
+        viewonly=True  # This relationship won't try to manage the foreign key
+    )
+    # This gives access to membership details
+    group_memberships = relationship(
+        "GroupMember",
+        back_populates="user",
+        overlaps="groups"  # Tell SQLAlchemy these relationships overlap
+    )
+    # This gives access to groups created by the user
+    created_groups = relationship(
+        "Group",
+        foreign_keys="Group.created_by",
+        back_populates="creator"
+    )
+    
     
