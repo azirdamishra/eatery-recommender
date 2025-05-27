@@ -8,11 +8,12 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 class LocationService:
+    def __init__(self, db: Session):
+        self.db = db
     
-    @staticmethod
-    def update_user_location(db: Session, user_id: int, location: UserLocationCreate) -> UserLocation:
+    def update_user_location(self, user_id: int, location: UserLocationCreate) -> UserLocation:
         #Get existing location or create new one
-        user_location = db.query(UserLocation).filter(UserLocation.user_id == user_id).first()
+        user_location = self.db.query(UserLocation).filter(UserLocation.user_id == user_id).first()
 
         if user_location:
             #Update existing location
@@ -27,15 +28,14 @@ class LocationService:
                 longitude=location.longitude,
                 last_updated=datetime.utcnow()
             )
-            db.add(user_location)
+            self.db.add(user_location)
 
-        db.commit()
-        db.refresh(user_location)
+        self.db.commit()
+        self.db.refresh(user_location)
         return user_location
     
-    @staticmethod
-    def get_user_location(db: Session, user_id: int) -> UserLocation:
-        location = db.query(UserLocation).filter(UserLocation.user_id == user_id).first()
+    def get_user_default_location(self, user_id: int) -> UserLocation:
+        location = self.db.query(UserLocation).filter(UserLocation.user_id == user_id).first()
         if not location:
             # Create and save a default location
             default_location = UserLocation(
@@ -44,14 +44,13 @@ class LocationService:
                 longitude=-74.0060,
                 last_updated=datetime.utcnow()
             )
-            db.add(default_location)
-            db.commit()
-            db.refresh(default_location)
+            self.db.add(default_location)
+            self.db.commit()
+            self.db.refresh(default_location)
             return default_location
         return location
     
-    @staticmethod
-    def save_landmark(db: Session, user_id: int, landmark: LandmarkCreate) -> SavedLandmark:
+    def save_landmark(self, user_id: int, landmark: LandmarkCreate) -> SavedLandmark:
         new_landmark = SavedLandmark(
             user_id=user_id,
             name=landmark.name,
@@ -59,18 +58,16 @@ class LocationService:
             longitude=landmark.longitude,
             description=landmark.description
         )
-        db.add(new_landmark)
-        db.commit()
-        db.refresh(new_landmark)
+        self.db.add(new_landmark)
+        self.db.commit()
+        self.db.refresh(new_landmark)
         return new_landmark
     
-    @staticmethod
-    def get_user_landmarks(db: Session, user_id: int) -> list[SavedLandmark]:
-        return db.query(SavedLandmark).filter(SavedLandmark.user_id == user_id).all()
+    def get_user_landmarks(self, user_id: int) -> list[SavedLandmark]:
+        return self.db.query(SavedLandmark).filter(SavedLandmark.user_id == user_id).all()
     
-    @staticmethod
-    def delete_landmark(db: Session, landmark_id: int, user_id: int) -> dict:
-        landmark = db.query(SavedLandmark).filter(
+    def delete_landmark(self, landmark_id: int, user_id: int) -> dict:
+        landmark = self.db.query(SavedLandmark).filter(
             SavedLandmark.id == landmark_id,
             SavedLandmark.user_id == user_id
         ).first()
@@ -78,6 +75,6 @@ class LocationService:
         if not landmark:
             raise HTTPException(status_code=404, detail="Landmark not found")
         
-        db.delete(landmark)
-        db.commit()
+        self.db.delete(landmark)
+        self.db.commit()
         return { "message": "Landmark deleted successfully" }
