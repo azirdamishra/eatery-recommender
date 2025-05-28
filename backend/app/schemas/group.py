@@ -25,8 +25,9 @@ class GroupMember(GroupMemberBase):
     group_id: int
     joined_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class Group(GroupBase):
     id: int
@@ -35,8 +36,9 @@ class Group(GroupBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class CentroidResponse(BaseModel):
     latitude: float

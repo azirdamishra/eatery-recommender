@@ -4,6 +4,7 @@ from app.models.user import User #SQLAlchemy user model
 from app.models.friend import FriendRequest, FriendRequestStatus
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserOut, UserSearchResult, UserResponse
+from app.schemas.friend import UserWithFriends
 from app.core.database import get_db #db session dependency
 from app.core.security import get_current_user
 from app.services.user_service import create_user, login_current_user, return_all_users
@@ -34,13 +35,13 @@ def login_user(user: UserCreate, db: Session = Depends(get_db)):
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
-@router.get("/me/friends", response_model=List[UserResponse])
+@router.get("/me/friends", response_model=List[UserWithFriends])
 def get_my_friends(
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get the current user's friends list"""
-    user = db.query(User).filter(User.id == current_user["id"]).first()
+    user = db.query(User).filter(User.id == current_user.id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user.friends

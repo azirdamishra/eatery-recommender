@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.models.group import Group, GroupMember
 from app.models.user import User
 from app.schemas.group import GroupCreate, GroupUpdate
@@ -114,7 +114,9 @@ class GroupService:
 
     def get_user_groups(self, user_id: int) -> List[Group]:
         """Get all groups a user is a member of"""
-        return self.db.query(Group).join(GroupMember).filter(GroupMember.user_id == user_id).all()
+        return self.db.query(Group).join(GroupMember).filter(GroupMember.user_id == user_id).options(
+            joinedload(Group.group_members)
+        ).all()
 
     def add_member_to_group(self, group_id: int, user_id: int, added_by_id: int) -> Group:
         """Add a new member to the group if they are friends with the adder"""

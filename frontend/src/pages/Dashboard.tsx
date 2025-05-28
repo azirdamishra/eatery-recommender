@@ -70,6 +70,15 @@ const Dashboard = () => {
                             <p className="text-slate-500">Manage your location and landmarks</p>
                         </Link>
 
+                        {/* Friend Groups Card */}
+                        <Link
+                            to="/groups"
+                            className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                        >
+                            <h3 className="text-lg font-semibold mb-2">Friend Groups</h3>
+                            <p className="text-slate-500">Create and manage groups with your friends</p>
+                        </Link>
+
                         {/* Settings Card */}
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h3 className="text-lg font-semibold mb-2">Settings</h3>

@@ -14,7 +14,7 @@ from app.services.group_service import GroupService
 
 router = APIRouter()
 
-@router.post("/", response_model=Group)
+@router.post("/create-group", response_model=Group)
 def create_group(
     group_data: GroupCreate,
     current_user: dict = Depends(get_current_user),

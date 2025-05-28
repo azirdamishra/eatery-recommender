@@ -5,6 +5,8 @@ import Register from './components/Register';
 import Dashboard from './pages/Dashboard';
 import FriendsPage from './pages/FriendsPage';
 import LocationPage from './pages/LocationPage';
+import FriendGroups from './pages/FriendGroups';
+import GroupDetail from './components/groups/GroupDetail';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, loading } = useAuth();
@@ -54,6 +56,22 @@ function App() {
                         element={
                             <PrivateRoute>
                                 <LocationPage />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/groups"
+                        element={
+                            <PrivateRoute>
+                                <FriendGroups />
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route
+                        path="/groups/:groupId"
+                        element={
+                            <PrivateRoute>
+                                <GroupDetail />
                             </PrivateRoute>
                         }
                     />

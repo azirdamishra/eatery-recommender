@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
-from .user import UserOut
+from .user import UserOut, UserResponse
 from app.models.friend import FriendRequest
 
 class FriendRequestBase(BaseModel):
@@ -37,8 +37,8 @@ class FriendRequestResponse(FriendRequestBase):
 class FriendRequestUpdate(BaseModel):
     status: str
 
-class UserWithFriends(UserOut):
-    friends: List[UserOut]
+class UserWithFriends(UserResponse):
+    friends: List[UserResponse]
 
     model_config = {
         "from_attributes": True
