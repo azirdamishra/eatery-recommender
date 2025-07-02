@@ -503,9 +503,6 @@ const LocationMap: React.FC<LocationMapProps> = ({
           >
             <div className="p-2">
               <h3 className="font-semibold text-lg text-red-600">🚨 SEARCH LOCATION</h3>
-              <p className="text-sm text-gray-500 mt-2">
-                Lat: {searchLocation.latitude.toFixed(6)}, Lng: {searchLocation.longitude.toFixed(6)}
-              </p>
             </div>
           </InfoWindow>
         )}
@@ -544,9 +541,6 @@ const LocationMap: React.FC<LocationMapProps> = ({
                     </p>
                   )}
                 </div>
-              </div>
-              <div className="mt-2 text-xs text-gray-500">
-                📍 {popupLandmark.latitude.toFixed(4)}, {popupLandmark.longitude.toFixed(4)}
               </div>
             </div>
             

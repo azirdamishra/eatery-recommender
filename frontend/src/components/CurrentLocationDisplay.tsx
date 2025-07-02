@@ -67,13 +67,6 @@ const CurrentLocationDisplay: React.FC<CurrentLocationDisplayProps> = ({
       
       <div className="space-y-2">
         <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">Coordinates:</span>
-          <span className="text-sm text-gray-600 font-mono">
-            {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-          </span>
-        </div>
-        
-        <div className="flex justify-between items-center">
           <span className="text-sm font-medium text-gray-700">Last updated:</span>
           <span className="text-sm text-gray-600">
             {new Date(location.last_updated).toLocaleString()}

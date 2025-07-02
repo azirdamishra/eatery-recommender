@@ -477,7 +477,7 @@ const LocationPage: React.FC = () => {
         location.longitude < -180 || 
         location.longitude > 180) {
       console.error('Invalid location data:', location);
-      setError('Invalid location coordinates. Please try again.');
+      setError('Invalid location data. Please try again.');
       return;
     }
     
@@ -948,9 +948,6 @@ const LocationPage: React.FC = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="font-medium text-blue-900">{pinnedLocation.name}</h3>
-                          <p className="text-xs text-blue-700 mt-1">
-                            {pinnedLocation.latitude.toFixed(6)}, {pinnedLocation.longitude.toFixed(6)}
-                          </p>
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -1010,9 +1007,6 @@ const LocationPage: React.FC = () => {
             </div>
             
             <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                <strong>Coordinates:</strong> {selectedPinnedLocation.latitude.toFixed(6)}, {selectedPinnedLocation.longitude.toFixed(6)}
-              </p>
               <p className="text-sm text-gray-500">
                 This pinned location is temporary and will be lost when you refresh the page.
               </p>
@@ -1076,14 +1070,6 @@ const LocationPage: React.FC = () => {
             </div>
             
             <div className="mb-6">
-              <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                <p className="text-sm font-medium text-gray-700 mb-1">
-                  Selected Coordinates:
-                </p>
-                <p className="text-sm text-gray-600 font-mono">
-                  {mapClickLocation.latitude.toFixed(6)}, {mapClickLocation.longitude.toFixed(6)}
-                </p>
-              </div>
               <p className="text-sm text-gray-500">
                 Choose how you'd like to save this location:
               </p>
