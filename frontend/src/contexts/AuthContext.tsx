@@ -27,34 +27,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+    const loadUser = async () => {
         const token = localStorage.getItem('token');
         if (token) {
-            authService.getCurrentUser()
-                .then((userData: User) => {
-                    setUser(userData);
-                })
-                .catch(() => {
-                    setUser(null);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
+            try {
+                const userData = await authService.getCurrentUser();
+                setUser(userData);
+            } catch (error) {
+                console.error('Error loading user:', error);
+                localStorage.removeItem('token');
+                setUser(null);
+            }
         } else {
-            setLoading(false);
+            setUser(null);
         }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        loadUser();
     }, []);
 
     const login = async (username: string, password: string, email: string) => {
-        console.log('AuthContext: Starting login...');
-        try{
+        try {
             const data = await authService.login(username, password, email) as LoginResponse;
-            console.log('AuthContext: Login response:', data);
-            //get current user should be properly called here
-            //waiting for user data
-            const user = await authService.getCurrentUser();
-            setUser(user);
-            console.log('AuthContext: User state updated:', data.user); //undefined because there is no user data 
+            localStorage.setItem('token', data.access_token);
+            await loadUser();
         } catch (error) {
             console.error('Login error:', error);
             throw error;
@@ -66,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = () => {
-        authService.logout();
+        localStorage.removeItem('token');
         setUser(null);
     };
 

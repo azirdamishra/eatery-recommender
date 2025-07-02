@@ -19,7 +19,7 @@ app = FastAPI(title="Eatery Recommender")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Your frontend URL
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],  # Allow both development ports
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers

@@ -150,3 +150,28 @@ class GroupService:
         self.db.commit()
         self.db.refresh(group)
         return group 
+
+    def get_member_locations(self, group_id: int) -> List[dict]:
+        """Get locations of all group members"""
+        group = self.get_group(group_id)
+        if not group:
+            return None
+
+        location_service = LocationService(self.db)
+        member_locations = []
+
+        for member in group.group_members:
+            user = self.db.query(User).filter(User.id == member.user_id).first()
+            if not user:
+                continue
+
+            location = location_service.get_user_default_location(member.user_id)
+            member_locations.append({
+                'user_id': member.user_id,
+                'username': user.username,
+                'latitude': location.latitude if location else None,
+                'longitude': location.longitude if location else None,
+                'has_location': bool(location)
+            })
+
+        return member_locations 

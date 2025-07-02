@@ -1,6 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, text
 from sqlalchemy import pool
 
 from alembic import context
@@ -27,7 +27,7 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from app.core.database import Base
-from app.models import User, FriendRequest  # Import all models here
+from app.models import User, FriendRequest, Group, SavedLandmark, UserLocation, GroupMember  # Import all models here
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -36,7 +36,16 @@ target_metadata = Base.metadata
 # ... etc.
 
 def get_url():
-    return os.getenv("DATABASE_URL")
+    # Try to get DATABASE_URL from environment
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        print("Running Alembic against DB:", database_url)
+        return database_url
+    else:
+        # Fall back to alembic.ini configuration
+        url = config.get_main_option("sqlalchemy.url")
+        print("Running Alembic against DB:", url)
+        return url
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -56,6 +65,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table_schema=None
     )
 
     with context.begin_transaction():
@@ -69,12 +79,11 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url()
     connectable = engine_from_config(
-        configuration,
+        config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        url=get_url(),
     )
 
     with connectable.connect() as connection:

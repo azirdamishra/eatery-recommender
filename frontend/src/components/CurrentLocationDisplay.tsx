@@ -5,12 +5,14 @@ interface CurrentLocationDisplayProps {
   location: UserLocation;
   onUpdateLocation: () => void;
   onSaveAsLandmark: () => void;
+  isUpdating?: boolean;
 }
 
 const CurrentLocationDisplay: React.FC<CurrentLocationDisplayProps> = ({
   location,
   onUpdateLocation,
-  onSaveAsLandmark
+  onSaveAsLandmark,
+  isUpdating = false
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
@@ -19,21 +21,54 @@ const CurrentLocationDisplay: React.FC<CurrentLocationDisplayProps> = ({
         <div className="flex gap-2">
           <button
             onClick={onUpdateLocation}
-            className="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            disabled={isUpdating}
+            className={`px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors ${
+              isUpdating
+                ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
+            }`}
           >
-            Update Location
+            {isUpdating ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
+                Updating...
+              </div>
+            ) : (
+              'Update Location'
+            )}
           </button>
           <button
             onClick={onSaveAsLandmark}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
           >
             Save as Landmark
           </button>
         </div>
       </div>
-      <p className="text-sm text-gray-600">
-        Last updated: {new Date(location.last_updated).toLocaleString()}
-      </p>
+      
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-gray-700">Coordinates:</span>
+          <span className="text-sm text-gray-600 font-mono">
+            {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+          </span>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-gray-700">Last updated:</span>
+          <span className="text-sm text-gray-600">
+            {new Date(location.last_updated).toLocaleString()}
+          </span>
+        </div>
+        
+        {isUpdating && (
+          <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-700">
+              📍 Getting your current location...
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

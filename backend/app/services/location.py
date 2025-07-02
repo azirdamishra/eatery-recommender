@@ -35,6 +35,32 @@ class LocationService:
         return user_location
     
     def get_user_default_location(self, user_id: int) -> UserLocation:
+        # First check if user has a current landmark
+        current_landmark = self.db.query(SavedLandmark).filter(
+            SavedLandmark.user_id == user_id,
+            SavedLandmark.is_current == True
+        ).first()
+
+        if current_landmark:
+            # Update user location with current landmark
+            user_location = self.db.query(UserLocation).filter(UserLocation.user_id == user_id).first()
+            if user_location:
+                user_location.latitude = current_landmark.latitude
+                user_location.longitude = current_landmark.longitude
+                user_location.last_updated = datetime.now()
+            else:
+                user_location = UserLocation(
+                    user_id=user_id,
+                    latitude=current_landmark.latitude,
+                    longitude=current_landmark.longitude,
+                    last_updated=datetime.utcnow()
+                )
+                self.db.add(user_location)
+            self.db.commit()
+            self.db.refresh(user_location)
+            return user_location
+
+        # If no current landmark, return existing location or create default
         location = self.db.query(UserLocation).filter(UserLocation.user_id == user_id).first()
         if not location:
             # Create and save a default location
@@ -65,6 +91,33 @@ class LocationService:
     
     def get_user_landmarks(self, user_id: int) -> list[SavedLandmark]:
         return self.db.query(SavedLandmark).filter(SavedLandmark.user_id == user_id).all()
+    
+    def set_current_landmark(self, landmark_id: int, user_id: int) -> SavedLandmark:
+        # First, unset any current landmarks for this user
+        self.db.query(SavedLandmark).filter(
+            SavedLandmark.user_id == user_id,
+            SavedLandmark.is_current == True
+        ).update({"is_current": False})
+
+        # Set the new current landmark
+        landmark = self.db.query(SavedLandmark).filter(
+            SavedLandmark.id == landmark_id,
+            SavedLandmark.user_id == user_id
+        ).first()
+
+        if not landmark:
+            raise HTTPException(status_code=404, detail="Landmark not found")
+
+        landmark.is_current = True
+        self.db.commit()
+        self.db.refresh(landmark)
+        return landmark
+    
+    def get_current_landmark(self, user_id: int) -> SavedLandmark:
+        return self.db.query(SavedLandmark).filter(
+            SavedLandmark.user_id == user_id,
+            SavedLandmark.is_current == True
+        ).first()
     
     def delete_landmark(self, landmark_id: int, user_id: int) -> dict:
         landmark = self.db.query(SavedLandmark).filter(

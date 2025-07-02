@@ -6,7 +6,8 @@ from app.models.group import Group, GroupMember
 from app.models.user import User
 from app.schemas.group import (
     Group, GroupCreate, GroupUpdate,
-    CentroidResponse, RestaurantRecommendation
+    CentroidResponse, RestaurantRecommendation,
+    MemberLocationResponse
 )
 from app.schemas.user import UserResponse
 from app.core.security import get_current_user
@@ -112,3 +113,16 @@ def get_user_groups(
     """Get all groups the current user is a member of"""
     group_service = GroupService(db)
     return group_service.get_user_groups(current_user.id) 
+
+@router.get("/{group_id}/member-locations", response_model=List[MemberLocationResponse])
+def get_member_locations(
+    group_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get locations of all group members"""
+    group_service = GroupService(db)
+    locations = group_service.get_member_locations(group_id)
+    if not locations:
+        raise HTTPException(status_code=404, detail="Group not found")
+    return locations 

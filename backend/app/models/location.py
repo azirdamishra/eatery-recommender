@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.core.database import Base
@@ -23,6 +23,7 @@ class SavedLandmark(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     description = Column(String, nullable=True)
+    is_current = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.now())
 
     user = relationship("User", back_populates="landmarks")

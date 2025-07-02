@@ -19,6 +19,9 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
+    print("=== START upgrade() ===")
+    ctx = op.get_context()
+    ctx.impl.transactional_ddl = False  # prevent silent rollback
     # Create password context for hashing
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
@@ -133,6 +136,7 @@ def upgrade() -> None:
             'friend_id': 2
         }
     ])
+    print("=== END upgrade() ===")
 
 def downgrade() -> None:
     op.drop_table('friends')

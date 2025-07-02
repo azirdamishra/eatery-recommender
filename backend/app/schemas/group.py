@@ -5,7 +5,7 @@ from datetime import datetime
 class GroupBase(BaseModel):
     name: str
     description: Optional[str] = None
-    radius: Optional[float] = 1.0
+    radius: float = 5.0  # Default radius in kilometers
 
 class GroupCreate(GroupBase):
     member_ids: List[int]
@@ -15,30 +15,24 @@ class GroupUpdate(GroupBase):
 
 class GroupMemberBase(BaseModel):
     user_id: int
-    is_admin: bool = False
-
-class GroupMemberCreate(GroupMemberBase):
-    pass
+    is_admin: bool
+    joined_at: datetime
 
 class GroupMember(GroupMemberBase):
     id: int
     group_id: int
-    joined_at: datetime
 
-    model_config = {
-        "from_attributes": True
-    }
+    class Config:
+        from_attributes = True
 
 class Group(GroupBase):
     id: int
     created_by: int
-    group_members: List[GroupMember]
     created_at: datetime
-    updated_at: datetime
+    group_members: List[GroupMember]
 
-    model_config = {
-        "from_attributes": True
-    }
+    class Config:
+        from_attributes = True
 
 class CentroidResponse(BaseModel):
     latitude: float
@@ -46,10 +40,16 @@ class CentroidResponse(BaseModel):
     radius: float
 
 class RestaurantRecommendation(BaseModel):
-    restaurant_id: str
+    id: str
     name: str
     address: str
-    latitude: float
-    longitude: float
-    distance: float
-    recommendations: List[str] 
+    rating: float
+    price_level: int
+    types: List[str]
+
+class MemberLocationResponse(BaseModel):
+    user_id: int
+    username: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    has_location: bool 
