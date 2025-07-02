@@ -9,7 +9,7 @@ import FriendGroups from './pages/FriendGroups';
 import GroupDetail from './components/groups/GroupDetail';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user, loading } = useAuth();
+    const { isAuthenticated, loading, mustReauthenticate } = useAuth();
 
     if (loading) {
         return (
@@ -19,8 +19,28 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         );
     }
 
-    if (!user) {
+    // If user must reauthenticate or is not authenticated, redirect to login
+    if (!isAuthenticated || mustReauthenticate) {
         return <Navigate to="/login" replace />;
+    }
+
+    return <>{children}</>;
+};
+
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { isAuthenticated, loading, mustReauthenticate } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+        );
+    }
+
+    // If user is authenticated and doesn't need to reauthenticate, redirect to dashboard
+    if (isAuthenticated && !mustReauthenticate) {
+        return <Navigate to="/dashboard" replace />;
     }
 
     return <>{children}</>;
@@ -31,8 +51,22 @@ function App() {
         <Router>
             <AuthProvider>
                 <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
+                    <Route 
+                        path="/login" 
+                        element={
+                            <PublicRoute>
+                                <Login />
+                            </PublicRoute>
+                        } 
+                    />
+                    <Route 
+                        path="/register" 
+                        element={
+                            <PublicRoute>
+                                <Register />
+                            </PublicRoute>
+                        } 
+                    />
                     <Route
                         path="/dashboard"
                         element={
@@ -73,7 +107,7 @@ function App() {
                             </PrivateRoute>
                         }
                     />
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
             </AuthProvider>
         </Router>

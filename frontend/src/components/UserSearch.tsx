@@ -22,6 +22,13 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
     const [loadingActions, setLoadingActions] = useState<Set<number>>(new Set());
     const [hasSearched, setHasSearched] = useState(false); // Track if we've actually performed a search
     
+    // Confirmation dialog state
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{
+        type: 'add' | 'remove' | 'cancel';
+        user: User;
+    } | null>(null);
+    
     // Refs to track timeouts for cleanup
     const successTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,7 +111,81 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
         };
     }, [searchTerm, searchUsers]);
 
-    const handleAddFriend = async (userId: number) => {
+    // Handle keyboard events for confirmation dialog
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (showConfirmDialog) {
+                if (event.key === 'Escape') {
+                    handleConfirmClose();
+                } else if (event.key === 'Enter' && confirmAction) {
+                    handleConfirmAction();
+                }
+            }
+        };
+
+        if (showConfirmDialog) {
+            document.addEventListener('keydown', handleKeyDown);
+            // Prevent body scroll when dialog is open
+            document.body.style.overflow = 'hidden';
+            
+            return () => {
+                document.removeEventListener('keydown', handleKeyDown);
+                document.body.style.overflow = 'unset';
+            };
+        }
+    }, [showConfirmDialog, confirmAction]);
+
+    // Confirmation dialog handlers
+    const showConfirmation = (type: 'add' | 'remove' | 'cancel', user: User) => {
+        setConfirmAction({ type, user });
+        setShowConfirmDialog(true);
+    };
+
+    const handleConfirmClose = () => {
+        setShowConfirmDialog(false);
+        setConfirmAction(null);
+    };
+
+    const handleConfirmAction = async () => {
+        if (!confirmAction) return;
+
+        const { type, user } = confirmAction;
+        
+        // Validate user data for security
+        if (!user || !user.id || typeof user.id !== 'number') {
+            console.error('Invalid user data in confirmation action:', user);
+            setError('Invalid user data. Please try again.');
+            handleConfirmClose();
+            return;
+        }
+
+        setShowConfirmDialog(false);
+        setConfirmAction(null);
+
+        try {
+            // Execute the confirmed action
+            switch (type) {
+                case 'add':
+                    await executeAddFriend(user.id);
+                    break;
+                case 'remove':
+                    await executeRemoveFriend(user.id);
+                    break;
+                case 'cancel':
+                    await executeCancelRequest(user.id);
+                    break;
+                default:
+                    console.error('Unknown confirmation action type:', type);
+                    setError('Unknown action type. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error executing confirmed action:', error);
+            setError('An unexpected error occurred. Please try again.');
+        }
+    };
+
+    // Renamed original handlers to "execute" functions
+    const executeAddFriend = async (userId: number) => {
         setError(null);
         setSuccess(null);
         
@@ -151,7 +232,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
         }
     };
 
-    const handleRemoveFriend = async (userId: number) => {
+    const executeRemoveFriend = async (userId: number) => {
         setError(null);
         setSuccess(null);
         
@@ -201,7 +282,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
         }
     };
 
-    const handleCancelRequest = async (userId: number) => {
+    const executeCancelRequest = async (userId: number) => {
         setError(null);
         setSuccess(null);
         
@@ -257,7 +338,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
             case 'friend':
                 return (
                     <button
-                        onClick={() => handleRemoveFriend(user.id)}
+                        onClick={() => showConfirmation('remove', user)}
                         disabled={isLoading}
                         className={`${baseButtonClass} text-red-600 hover:text-white hover:bg-red-600`}
                     >
@@ -274,7 +355,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
             case 'request_sent':
                 return (
                     <button
-                        onClick={() => handleCancelRequest(user.id)}
+                        onClick={() => showConfirmation('cancel', user)}
                         disabled={isLoading}
                         className={`${baseButtonClass} text-yellow-600 hover:text-white hover:bg-yellow-600`}
                     >
@@ -297,7 +378,7 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
             default:
                 return (
                     <button
-                        onClick={() => handleAddFriend(user.id)}
+                        onClick={() => showConfirmation('add', user)}
                         disabled={isLoading}
                         className={`${baseButtonClass} text-indigo-600 hover:text-white hover:bg-indigo-600`}
                     >
@@ -424,6 +505,113 @@ const UserSearch: React.FC<UserSearchProps> = ({ onUserSelect }) => {
                     )}
                 </div>
             </div>
+            
+            {/* Confirmation Dialog */}
+            {showConfirmDialog && confirmAction && (
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                    onClick={(e) => {
+                        // Close dialog if clicking on backdrop
+                        if (e.target === e.currentTarget) {
+                            handleConfirmClose();
+                        }
+                    }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="confirm-dialog-title"
+                >
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 transform transition-all">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                confirmAction.type === 'remove' 
+                                    ? 'bg-red-100' 
+                                    : confirmAction.type === 'cancel'
+                                    ? 'bg-yellow-100'
+                                    : 'bg-blue-100'
+                            }`}>
+                                {confirmAction.type === 'remove' && (
+                                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                                {confirmAction.type === 'cancel' && (
+                                    <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                                {confirmAction.type === 'add' && (
+                                    <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                                    </svg>
+                                )}
+                            </div>
+                            <div className="flex-1">
+                                <h3 
+                                    id="confirm-dialog-title"
+                                    className="text-lg font-semibold text-gray-900"
+                                >
+                                    {confirmAction.type === 'remove' && 'Remove Friend'}
+                                    {confirmAction.type === 'cancel' && 'Cancel Friend Request'}
+                                    {confirmAction.type === 'add' && 'Add Friend'}
+                                </h3>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    {confirmAction.type === 'remove' && 
+                                        `Are you sure you want to remove ${confirmAction.user.username} from your friends?`
+                                    }
+                                    {confirmAction.type === 'cancel' && 
+                                        `Are you sure you want to cancel your friend request to ${confirmAction.user.username}?`
+                                    }
+                                    {confirmAction.type === 'add' && 
+                                        `Do you want to send a friend request to ${confirmAction.user.username}?`
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-gray-700">
+                                        {confirmAction.user.username[0].toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-gray-900 truncate">
+                                        {confirmAction.user.username}
+                                    </p>
+                                    <p className="text-sm text-gray-500 truncate">
+                                        {confirmAction.user.email}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={handleConfirmClose}
+                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmAction}
+                                className={`flex-1 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors font-medium ${
+                                    confirmAction.type === 'remove'
+                                        ? 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500'
+                                        : confirmAction.type === 'cancel'
+                                        ? 'bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500'
+                                        : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+                                }`}
+                            >
+                                {confirmAction.type === 'remove' && 'Remove Friend'}
+                                {confirmAction.type === 'cancel' && 'Cancel Request'}
+                                {confirmAction.type === 'add' && 'Send Request'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             
             {/* CSS Animation Styles */}
             <style>{`
