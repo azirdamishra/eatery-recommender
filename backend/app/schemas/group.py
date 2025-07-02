@@ -52,4 +52,48 @@ class MemberLocationResponse(BaseModel):
     username: str
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    has_location: bool 
+    has_location: bool
+
+# Admin-specific schemas
+class AdminPromoteRequest(BaseModel):
+    user_id: int
+
+class AdminDemoteRequest(BaseModel):
+    user_id: int
+
+class RemoveMemberRequest(BaseModel):
+    user_id: int
+
+class AdminAddMemberRequest(BaseModel):
+    user_id: int
+
+class AdminGroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    radius: Optional[float] = None
+
+class AdminActionResponse(BaseModel):
+    success: bool
+    message: str
+    group: Optional[Group] = None
+
+class GroupMemberWithUser(BaseModel):
+    id: int
+    user_id: int
+    group_id: int
+    is_admin: bool
+    joined_at: datetime
+    username: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
+class GroupWithMemberDetails(GroupBase):
+    id: int
+    created_by: int
+    created_at: datetime
+    group_members: List[GroupMemberWithUser]
+
+    class Config:
+        from_attributes = True 

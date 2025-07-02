@@ -10,6 +10,37 @@ class GroupService:
     def __init__(self, db: Session):
         self.db = db
 
+    def _verify_admin_permissions(self, group_id: int, user_id: int) -> bool:
+        """Helper method to verify if user is an admin of the group"""
+        admin_member = self.db.query(GroupMember).filter(
+            GroupMember.group_id == group_id,
+            GroupMember.user_id == user_id,
+            GroupMember.is_admin == True
+        ).first()
+        return admin_member is not None
+
+    def _verify_group_membership(self, group_id: int, user_id: int) -> bool:
+        """Helper method to verify if user is a member of the group"""
+        member = self.db.query(GroupMember).filter(
+            GroupMember.group_id == group_id,
+            GroupMember.user_id == user_id
+        ).first()
+        return member is not None
+
+    def _get_group_member(self, group_id: int, user_id: int) -> Optional[GroupMember]:
+        """Helper method to get a specific group member"""
+        return self.db.query(GroupMember).filter(
+            GroupMember.group_id == group_id,
+            GroupMember.user_id == user_id
+        ).first()
+
+    def _count_admins(self, group_id: int) -> int:
+        """Helper method to count the number of admins in a group"""
+        return self.db.query(GroupMember).filter(
+            GroupMember.group_id == group_id,
+            GroupMember.is_admin == True
+        ).count()
+
     def create_group(self, group_data: GroupCreate, creator_id: int) -> Group:
         # Get creator's friends
         creator = self.db.query(User).filter(User.id == creator_id).first()
@@ -61,6 +92,36 @@ class GroupService:
     def get_group(self, group_id: int) -> Optional[Group]:
         return self.db.query(Group).filter(Group.id == group_id).first()
 
+    def get_group_with_member_details(self, group_id: int) -> Optional[dict]:
+        """Get group with detailed member information including usernames and emails"""
+        group = self.get_group(group_id)
+        if not group:
+            return None
+
+        members_with_details = []
+        for member in group.group_members:
+            user = self.db.query(User).filter(User.id == member.user_id).first()
+            if user:
+                members_with_details.append({
+                    'id': member.id,
+                    'user_id': member.user_id,
+                    'group_id': member.group_id,
+                    'is_admin': member.is_admin,
+                    'joined_at': member.joined_at,
+                    'username': user.username,
+                    'email': user.email
+                })
+
+        return {
+            'id': group.id,
+            'name': group.name,
+            'description': group.description,
+            'radius': group.radius,
+            'created_by': group.created_by,
+            'created_at': group.created_at,
+            'group_members': members_with_details
+        }
+
     def update_group_radius(self, group_id: int, radius: float) -> Optional[Group]:
         group = self.get_group(group_id)
         if group:
@@ -68,6 +129,203 @@ class GroupService:
             self.db.commit()
             self.db.refresh(group)
         return group
+
+    # ============= ADMIN-ONLY FUNCTIONS =============
+
+    def admin_update_group(self, group_id: int, admin_id: int, update_data: dict) -> Group:
+        """Admin-only function to update group settings"""
+        # Verify admin permissions
+        if not self._verify_admin_permissions(group_id, admin_id):
+            raise ValueError("Only group admins can update group settings")
+
+        group = self.get_group(group_id)
+        if not group:
+            raise ValueError("Group not found")
+
+        # Update fields if provided
+        if 'name' in update_data and update_data['name'] is not None:
+            if not update_data['name'].strip():
+                raise ValueError("Group name cannot be empty")
+            group.name = update_data['name'].strip()
+
+        if 'description' in update_data and update_data['description'] is not None:
+            group.description = update_data['description'].strip() if update_data['description'].strip() else None
+
+        if 'radius' in update_data and update_data['radius'] is not None:
+            if update_data['radius'] <= 0 or update_data['radius'] > 100:
+                raise ValueError("Radius must be between 0.1 and 100 kilometers")
+            group.radius = update_data['radius']
+
+        self.db.commit()
+        self.db.refresh(group)
+        return group
+
+    def admin_remove_member(self, group_id: int, admin_id: int, member_id: int) -> Group:
+        """Admin-only function to remove a member from the group"""
+        # Verify admin permissions
+        if not self._verify_admin_permissions(group_id, admin_id):
+            raise ValueError("Only group admins can remove members")
+
+        # Cannot remove yourself
+        if admin_id == member_id:
+            raise ValueError("Admins cannot remove themselves. Use leave group functionality instead")
+
+        # Get the member to remove
+        member_to_remove = self._get_group_member(group_id, member_id)
+        if not member_to_remove:
+            raise ValueError("Member not found in this group")
+
+        # If removing an admin, ensure there's at least one admin left
+        if member_to_remove.is_admin:
+            remaining_admins = self._count_admins(group_id) - 1
+            if remaining_admins < 1:
+                raise ValueError("Cannot remove the last admin. Promote another member to admin first")
+
+        # Remove the member
+        self.db.delete(member_to_remove)
+        self.db.commit()
+
+        # Return updated group
+        return self.get_group(group_id)
+
+    def admin_promote_member(self, group_id: int, admin_id: int, member_id: int) -> Group:
+        """Admin-only function to promote a member to admin"""
+        # Verify admin permissions
+        if not self._verify_admin_permissions(group_id, admin_id):
+            raise ValueError("Only group admins can promote members")
+
+        # Get the member to promote
+        member_to_promote = self._get_group_member(group_id, member_id)
+        if not member_to_promote:
+            raise ValueError("Member not found in this group")
+
+        if member_to_promote.is_admin:
+            raise ValueError("Member is already an admin")
+
+        # Promote to admin
+        member_to_promote.is_admin = True
+        self.db.commit()
+
+        return self.get_group(group_id)
+
+    def admin_demote_member(self, group_id: int, admin_id: int, member_id: int) -> Group:
+        """Admin-only function to demote an admin to regular member"""
+        # Verify admin permissions
+        if not self._verify_admin_permissions(group_id, admin_id):
+            raise ValueError("Only group admins can demote other admins")
+
+        # Cannot demote yourself
+        if admin_id == member_id:
+            raise ValueError("Admins cannot demote themselves")
+
+        # Get the member to demote
+        member_to_demote = self._get_group_member(group_id, member_id)
+        if not member_to_demote:
+            raise ValueError("Member not found in this group")
+
+        if not member_to_demote.is_admin:
+            raise ValueError("Member is not an admin")
+
+        # Ensure there's at least one admin left after demotion
+        remaining_admins = self._count_admins(group_id) - 1
+        if remaining_admins < 1:
+            raise ValueError("Cannot demote the last admin. There must be at least one admin in the group")
+
+        # Demote from admin
+        member_to_demote.is_admin = False
+        self.db.commit()
+
+        return self.get_group(group_id)
+
+    def admin_add_member(self, group_id: int, admin_id: int, new_member_id: int) -> Group:
+        """Admin-only function to add a new member to the group"""
+        # Verify admin permissions
+        if not self._verify_admin_permissions(group_id, admin_id):
+            raise ValueError("Only group admins can add new members")
+
+        group = self.get_group(group_id)
+        if not group:
+            raise ValueError("Group not found")
+
+        # Check if user is already a member
+        existing_member = self._get_group_member(group_id, new_member_id)
+        if existing_member:
+            raise ValueError("User is already a member of this group")
+
+        # Check if new member exists
+        new_user = self.db.query(User).filter(User.id == new_member_id).first()
+        if not new_user:
+            raise ValueError("User not found")
+
+        # Check if new member is a friend of the admin
+        admin = self.db.query(User).filter(User.id == admin_id).first()
+        if not admin:
+            raise ValueError("Admin not found")
+        
+        if not any(friend.id == new_member_id for friend in admin.friends):
+            raise ValueError("You can only add friends to the group")
+
+        # Add new member
+        new_member = GroupMember(
+            group_id=group_id,
+            user_id=new_member_id,
+            is_admin=False
+        )
+        self.db.add(new_member)
+        self.db.commit()
+        
+        # Return updated group
+        return self.get_group(group_id)
+
+    def admin_delete_group(self, group_id: int, admin_id: int) -> bool:
+        """Admin-only function to permanently delete a group"""
+        # Verify admin permissions
+        if not self._verify_admin_permissions(group_id, admin_id):
+            raise ValueError("Only group admins can delete the group")
+
+        group = self.get_group(group_id)
+        if not group:
+            raise ValueError("Group not found")
+
+        # Delete all group members first (due to foreign key constraints)
+        self.db.query(GroupMember).filter(GroupMember.group_id == group_id).delete()
+        
+        # Delete the group
+        self.db.delete(group)
+        self.db.commit()
+
+        return True
+
+    def leave_group(self, group_id: int, user_id: int) -> bool:
+        """Allow any member to leave the group (non-admin function)"""
+        member = self._get_group_member(group_id, user_id)
+        if not member:
+            raise ValueError("You are not a member of this group")
+
+        # If leaving member is an admin, check if there are other admins
+        if member.is_admin:
+            remaining_admins = self._count_admins(group_id) - 1
+            if remaining_admins < 1:
+                # Get total members count
+                total_members = self.db.query(GroupMember).filter(GroupMember.group_id == group_id).count()
+                if total_members > 1:
+                    raise ValueError("Cannot leave group as the last admin. Promote another member to admin first or delete the group")
+
+        # Remove the member
+        self.db.delete(member)
+        self.db.commit()
+
+        # Check if group is now empty and auto-delete if so
+        remaining_members = self.db.query(GroupMember).filter(GroupMember.group_id == group_id).count()
+        if remaining_members == 0:
+            group = self.get_group(group_id)
+            if group:
+                self.db.delete(group)
+                self.db.commit()
+
+        return True
+
+    # ============= EXISTING FUNCTIONS =============
 
     def calculate_centroid(self, group_id: int) -> Optional[dict]:
         group = self.get_group(group_id)
@@ -131,6 +389,11 @@ class GroupService:
         ).first()
         if not adder_member:
             raise ValueError("You are not a member of this group")
+
+        # Check if user is already a member
+        existing_member = self._get_group_member(group_id, user_id)
+        if existing_member:
+            raise ValueError("User is already a member of this group")
 
         # Check if new member is a friend of the adder
         adder = self.db.query(User).filter(User.id == added_by_id).first()
