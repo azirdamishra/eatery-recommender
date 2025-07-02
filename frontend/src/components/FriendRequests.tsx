@@ -85,15 +85,17 @@ const FriendRequests: React.FC = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-4">
+        <div className="w-full">
             <div className="mb-8">
                 <h2 className="text-2xl font-bold mb-4">Friend Requests</h2>
                 {friendRequests.length === 0 ? (
-                    <p className="text-gray-500">No pending friend requests</p>
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <p className="text-gray-500 text-center">No pending friend requests</p>
+                    </div>
                 ) : (
                     <div className="space-y-4">
                         {friendRequests.map((request) => (
-                            <div key={request.id} className="bg-white p-4 rounded-lg shadow">
+                            <div key={request.id} className="bg-white p-6 rounded-lg shadow-md">
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <p className="font-semibold">Request from {request.sender_username}</p>
@@ -105,13 +107,13 @@ const FriendRequests: React.FC = () => {
                                         <div className="space-x-2">
                                             <button
                                                 onClick={() => handleAcceptRequest(request.id)}
-                                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
                                             >
                                                 Accept
                                             </button>
                                             <button
                                                 onClick={() => handleDeclineRequest(request.id)}
-                                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
                                             >
                                                 Decline
                                             </button>
@@ -127,11 +129,13 @@ const FriendRequests: React.FC = () => {
             <div>
                 <h2 className="text-2xl font-bold mb-4">Friends</h2>
                 {friends.length === 0 ? (
-                    <p className="text-gray-500">No friends yet</p>
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <p className="text-gray-500 text-center">No friends yet</p>
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {friends.map((friend) => (
-                            <div key={friend.id} className="bg-white p-4 rounded-lg shadow">
+                            <div key={friend.id} className="bg-white p-4 rounded-lg shadow-md">
                                 <h3 className="font-semibold">{friend.username}</h3>
                                 <p className="text-sm text-gray-500">{friend.email}</p>
                             </div>

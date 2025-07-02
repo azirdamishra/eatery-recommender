@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FriendRequests from '../components/FriendRequests';
-import SendFriendRequest from '../components/SendFriendRequest';
 import UserSearch from '../components/UserSearch';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -29,11 +28,13 @@ const FriendsPage: React.FC = () => {
                 </Link>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-8">
+            <div className="space-y-8">
+                {/* User Search Section */}
+                <div className="bg-white rounded-lg shadow-md p-6">
                     <UserSearch onUserSelect={handleUserSelect} />
-                    <SendFriendRequest key={refreshKey} />
                 </div>
+
+                {/* Friend Requests and Friends List */}
                 <div>
                     <FriendRequests key={refreshKey} />
                 </div>
