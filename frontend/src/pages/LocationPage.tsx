@@ -584,6 +584,53 @@ const LocationPage: React.FC = () => {
     }
   };
 
+  const handlePinCurrentLocation = () => {
+    if (!currentLocation) {
+      setError('No current location available to pin.');
+      return;
+    }
+
+    // Validate current location data for security
+    if (typeof currentLocation.latitude !== 'number' || 
+        typeof currentLocation.longitude !== 'number' ||
+        isNaN(currentLocation.latitude) || 
+        isNaN(currentLocation.longitude)) {
+      setError('Invalid current location data. Cannot pin location.');
+      return;
+    }
+
+    // Generate a unique ID for the pinned location
+    const pinnedLocationId = `pin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create a name for the pinned current location
+    const locationName = `Current Location ${pinnedLocations.length + 1}`;
+    
+    const newPinnedLocation = {
+      latitude: currentLocation.latitude,
+      longitude: currentLocation.longitude,
+      id: pinnedLocationId,
+      name: locationName
+    };
+
+    console.log('📍 PINNING CURRENT LOCATION:', newPinnedLocation);
+    
+    // Add to pinned locations
+    setPinnedLocations(prev => [...prev, newPinnedLocation]);
+    
+    // Set as search location to show red marker and center map
+    setSearchLocation({
+      latitude: currentLocation.latitude,
+      longitude: currentLocation.longitude
+    });
+    
+    // Show success message
+    setSuccessMessage(`Current location pinned as "${locationName}"`);
+    setTimeout(() => setSuccessMessage(null), 3000);
+    
+    // Clear any errors
+    setError(null);
+  };
+
   // Enhanced landmark save with better state management
   const handleLandmarkSave = useCallback(async (name: string, description: string) => {
     try {
@@ -800,6 +847,10 @@ const LocationPage: React.FC = () => {
                     <span className="text-base">🏛️</span>
                     <span className="text-gray-700">View landmarks - scroll & center</span>
                   </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-base">📌</span>
+                    <span className="text-gray-700">Pin current/search locations</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -852,6 +903,7 @@ const LocationPage: React.FC = () => {
                 location={currentLocation}
                 onUpdateLocation={handleUpdateLocation}
                 onSaveAsLandmark={handleSaveCurrentLocationAsLandmark}
+                onPinLocation={handlePinCurrentLocation}
                 isUpdating={isUpdatingLocation}
               />
             )}

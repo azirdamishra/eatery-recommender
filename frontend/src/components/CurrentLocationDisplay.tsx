@@ -5,6 +5,7 @@ interface CurrentLocationDisplayProps {
   location: UserLocation;
   onUpdateLocation: () => void;
   onSaveAsLandmark: () => void;
+  onPinLocation: () => void;
   isUpdating?: boolean;
 }
 
@@ -12,17 +13,18 @@ const CurrentLocationDisplay: React.FC<CurrentLocationDisplayProps> = ({
   location,
   onUpdateLocation,
   onSaveAsLandmark,
+  onPinLocation,
   isUpdating = false
 }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-start mb-4">
         <h2 className="text-xl font-semibold">Current Location</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={onUpdateLocation}
             disabled={isUpdating}
-            className={`px-4 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors ${
+            className={`px-3 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors whitespace-nowrap ${
               isUpdating
                 ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
                 : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
@@ -38,8 +40,25 @@ const CurrentLocationDisplay: React.FC<CurrentLocationDisplayProps> = ({
             )}
           </button>
           <button
+            onClick={onPinLocation}
+            disabled={isUpdating}
+            className={`px-3 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 transition-colors whitespace-nowrap ${
+              isUpdating
+                ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                : 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+            }`}
+            title="Pin current location to the map"
+          >
+            📌 Pin Location
+          </button>
+          <button
             onClick={onSaveAsLandmark}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            disabled={isUpdating}
+            className={`px-3 py-2 text-sm font-medium rounded-md focus:outline-none focus:ring-2 transition-colors whitespace-nowrap ${
+              isUpdating
+                ? 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                : 'text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'
+            }`}
           >
             Save as Landmark
           </button>
