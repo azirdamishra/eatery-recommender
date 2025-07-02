@@ -282,45 +282,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
     console.log('🗺️ Map center:', map.getCenter()?.toJSON());
     console.log('🗺️ Map zoom:', map.getZoom());
     setMap(map);
-    
-    // Debug: Check what's actually on the map after a delay
-    setTimeout(() => {
-      console.log('🔍 MAP DEBUG - Checking actual map state after 2 seconds:');
-      console.log('  - Map center now:', map.getCenter()?.toJSON());
-      console.log('  - Map zoom now:', map.getZoom());
-      console.log('  - Map bounds:', map.getBounds()?.toJSON());
-      
-      // Try to access map markers (this might not work but worth trying)
-      try {
-        console.log('  - Map div:', map.getDiv());
-        const markers = map.getDiv().querySelectorAll('[title*="MARKER"]');
-        console.log('  - Found markers on page:', markers.length, markers);
-        
-        // EMERGENCY: Create a native Google Maps marker if no React markers are visible
-        if (markers.length === 0 && searchLocation) {
-          console.log('🚨 EMERGENCY: Creating native Google Maps marker as fallback!');
-          const nativeMarker = new google.maps.Marker({
-            position: { lat: searchLocation.latitude, lng: searchLocation.longitude },
-            map: map,
-            title: '🚨 NATIVE EMERGENCY MARKER',
-            icon: {
-              url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-              scaledSize: new google.maps.Size(32, 32)
-            }
-          });
-          
-          nativeMarker.addListener('click', () => {
-            console.log('🚨 NATIVE MARKER CLICKED!');
-            setShowSearchLocationInfo(true);
-          });
-          
-          console.log('✅ NATIVE MARKER CREATED:', nativeMarker);
-        }
-      } catch (e) {
-        console.log('  - Could not check for markers:', e);
-      }
-    }, 2000);
-  }, [searchLocation, setShowSearchLocationInfo]);
+  }, []);
 
   const onUnmount = useCallback(() => {
     console.log('🗺️ MAP UNMOUNTED');
