@@ -5,9 +5,10 @@ interface LandmarkListProps {
   landmarks: Landmark[];
   onDelete: (id: number) => void;
   onSelect: (landmark: Landmark) => void;
+  viewingLandmarkId?: number | null;
 }
 
-const LandmarkList: React.FC<LandmarkListProps> = ({ landmarks, onDelete, onSelect }) => {
+const LandmarkList: React.FC<LandmarkListProps> = ({ landmarks, onDelete, onSelect, viewingLandmarkId }) => {
   if (landmarks.length === 0) {
     return (
       <div className="text-center py-4 text-gray-500">
@@ -36,9 +37,26 @@ const LandmarkList: React.FC<LandmarkListProps> = ({ landmarks, onDelete, onSele
             <div className="flex gap-2">
               <button
                 onClick={() => onSelect(landmark)}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                disabled={viewingLandmarkId === landmark.id}
+                className={`text-sm font-medium transition-colors duration-200 hover:underline ${
+                  viewingLandmarkId === landmark.id
+                    ? 'text-blue-400 cursor-not-allowed'
+                    : 'text-blue-600 hover:text-blue-800'
+                }`}
+                title={
+                  viewingLandmarkId === landmark.id
+                    ? 'Scrolling to map...'
+                    : `View ${landmark.name} on map - Will scroll to map and center on location`
+                }
               >
-                View
+                {viewingLandmarkId === landmark.id ? (
+                  <span className="flex items-center gap-1">
+                    <div className="animate-spin rounded-full h-3 w-3 border border-blue-400 border-t-transparent"></div>
+                    Viewing...
+                  </span>
+                ) : (
+                  '🏛️ View'
+                )}
               </button>
               <button
                 onClick={() => onDelete(landmark.id)}
